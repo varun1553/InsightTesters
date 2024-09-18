@@ -1,0 +1,79 @@
+/* styles.css */
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  .post {
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    margin-bottom: 20px;
+  }
+  
+  .post h3 {
+    margin-top: 0;
+  }
+  
+  .pagination {
+    display: flex;
+    list-style: none;
+    padding: 0;
+    justify-content: center;
+  }
+  
+  .pagination li {
+    margin-right: 10px;
+  }
+  
+  .pagination li a {
+    text-decoration: none;
+    color: #007bff;
+    padding: 5px 10px;
+    border: 1px solid #007bff;
+    border-radius: 5px;
+  }
+  
+  .pagination li.active a {
+    background-color: #007bff;
+    color: #fff;
+  }
+
+  .post_link a {
+    text-decoration: none; /* Remove underline from link */
+    color: #333; /* Set link color */
+  }
+  
+  .post_link a:hover {
+    color: #555; /* Change color on hover */
+  }
+  
+  .post_link div {
+    padding: 10px; /* Add padding around the content */
+    border: 1px solid #ccc; /* Add border */
+    border-radius: 5px; /* Add border radius for rounded corners */
+  }
+  
+  .post_link h3 {
+    margin: 0; /* Remove default margin for heading */
+  }
+  
+  .post_link p {
+    margin: 5px 0; /* Add spacing between paragraphs */
+  }
+  
+  .post_link p:last-child {
+    margin-bottom: 0; /* Remove margin from last paragraph */
+  }
+  
+  .post_link .category {
+    font-style: italic; /* Style category text */
+  }
+  
+  .post_container h3{
+    text-decoration: none; /* Remove underline from link */
+    color: #333;
+  }
+
+  

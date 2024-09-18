@@ -1,0 +1,64 @@
+.new-post-card {
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+    background-color: #f9f9f9;
+  }
+  
+  .form-group {
+    margin-bottom: 15px;
+  }
+  
+  .form-control {
+    width: 100%;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+  }
+  
+  .btn-primary {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .btn-primary:hover {
+    background-color: #0056b3;
+  }
+  
+  .event-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    margin-bottom: 20px;
+  }
+  
+  .event-details {
+    flex-grow: 1;
+  }
+  
+  .event-image img {
+    max-width: 100px;
+    border-radius: 8px;
+    margin-left: 20px;
+  }
+  
+  .buttons button {
+    margin-left: 10px;
+  }
+  .buttons {
+    margin-right: 20px; /* Adjust as needed */
+  }
+  .event-image img {
+    max-width: 300px;
+    border-radius: 8px;
+    margin-left: 20px;
+}
