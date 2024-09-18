@@ -1,0 +1,23 @@
+/* Messages.css */
+
+/* Add padding to the list group */
+.list-group.received-messages {
+    padding: 0;
+}
+
+/* Style individual message items */
+.list-group-item {
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+}
+
+/* Add margin to the bottom of each message */
+.list-group-item + .list-group-item {
+    margin-top: 10px;
+}
+
+/* Add border-top to all message items except the first one */
+.list-group-item.border-top {
+    border-top: none;
+}
