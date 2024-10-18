@@ -3,6 +3,11 @@ const exp = require("express");
 const app = exp();
 const mclient=require("mongodb").MongoClient;
 const cors = require("cors")
+const bodyParser = require('body-parser');
+
+// Middleware to parse JSON bodies
+app.use(bodyParser.json());
+app.use(exp.json());
 
 //import path modules 
 const path=require('path');

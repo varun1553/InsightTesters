@@ -17,7 +17,7 @@ userApp.use(exp.urlencoded());
 
 //create route to handle '/getusers' path
 userApp.get(
-  "/getusers", verifyToken,
+  "/getusers",
   expressAsyncHandler(async (request, response) => {
     //get userCollectionObject
     let userCollectionObject = request.app.get("userCollectionObject");
@@ -42,7 +42,7 @@ userApp.post(
     });
     //if username not existed
     if (userOfDB == null) {
-      response.send({ message: "Invalid user" });
+      response.send({ message: "Invalid username" });
     }
     //if username existed
     else {

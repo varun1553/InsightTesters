@@ -127,14 +127,14 @@ function Login() {
                 />
                 <Form.Check.Label>User</Form.Check.Label>
               </Form.Check>
-              {/* <Form.Check inline type="radio" id="admin">
+              <Form.Check inline type="radio" id="admin">
                 <Form.Check.Input
                   type="radio"
                   value="admin"
                   {...register("userType", { required: true })}
                 />
                 <Form.Check.Label>Admin</Form.Check.Label>
-              </Form.Check> */}
+              </Form.Check>
             </Form.Group>
 
             <Form.Group className="mb-3">

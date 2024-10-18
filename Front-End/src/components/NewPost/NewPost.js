@@ -3,7 +3,7 @@ import { useSelector } from "react-redux";
 import axios from 'axios';
 import './NewPost.css';
 import { useForm } from "react-hook-form";
-import { Form, Button, Container } from "react-bootstrap";
+import { Form, Button } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 const apiUrl = process.env.REACT_APP_URL;
 
@@ -20,21 +20,19 @@ function NewPost() {
     try {
       // Add current user's name to the postObj
       postObj.createdBy = userObj.username;
-
+      postObj.likecount = 0;
       const formData = new FormData();
+
       console.log(postObj);
       formData.append("postObj", JSON.stringify(postObj));
-
-      console.log(formData);
-      const response = await axios.post(apiUrl+"/post-api/new-post", formData, {
+      const response = await axios.post(apiUrl + "/post-api/new-post", formData, {
         headers: {
           "Content-Type": 'application/json',
         },
       });
 
-      console.log("New Post Added:", response.data);
       alert(response.data.message);
-      if(response.data.message === "New Post created"){
+      if (response.data.message === "New Post created") {
         navigate('/post-api/posts');
       }
     } catch (error) {
@@ -52,10 +50,20 @@ function NewPost() {
           <Form.Control
             type="text"
             placeholder="Enter Title.."
-            {...register("title", { required: true })}
+            {...register("title", {
+              required: "Title is required",
+              minLength: {
+                value: 5,
+                message: "Title must be at least 5 characters long",
+              },
+              maxLength: {
+                value: 100,
+                message: "Title must not exceed 100 characters",
+              },
+            })}
           />
           {errors.title && (
-            <p className="text-danger">* Title is required</p>
+            <p className="text-danger">{errors.title.message}</p>
           )}
         </Form.Group>
 
@@ -64,17 +72,47 @@ function NewPost() {
           <Form.Control
             as="textarea"
             placeholder="Enter Content.."
-            {...register("content", { required: true })}
+            {...register("content", {
+              required: "Content is required",
+              minLength: {
+                value: 10,
+                message: "Content must be at least 10 characters long",
+              },
+              maxLength: {
+                value: 500,
+                message: "Content must not exceed 500 characters",
+              },
+            })}
           />
           {errors.content && (
-            <p className="text-danger">* Content is required</p>
+            <p className="text-danger">{errors.content.message}</p>
+          )}
+        </Form.Group>
+
+        <Form.Group className="mb-3" controlId="imageURL">
+          <Form.Label>Image URL:</Form.Label>
+          <Form.Control
+            type="text"
+            placeholder="Enter Image URL.."
+            {...register("imageUrl", {
+              required: "Image URL is required",
+              pattern: {
+                value: /^(https?:\/\/.*\.(?:png|jpg|jpeg|gif|svg|webp))/i,
+                message: "Please enter a valid image URL",
+              },
+            })}
+          />
+          {errors.imageUrl && (
+            <p className="text-danger">{errors.imageUrl.message}</p>
           )}
         </Form.Group>
 
         <Form.Group className="mb-3" controlId="category">
           <Form.Label>Category:</Form.Label>
           <Form.Select
-            {...register("category", { required: true })}
+            {...register("category", {
+              required: "Category is required",
+            })}
           >
             <option value="">Select Category</option>
             <option value="technology">Technology</option>
@@ -82,28 +120,14 @@ function NewPost() {
             <option value="travel">Travel</option>
           </Form.Select>
           {errors.category && (
-            <p className="text-danger">* Category is required</p>
+            <p className="text-danger">{errors.category.message}</p>
           )}
         </Form.Group>
-
-        {/* <Form.Group className="mb-3" controlId="visibility">
-          <Form.Label>Visibility:</Form.Label>
-          <Form.Select
-            {...register("visibility", { required: true })}
-          >
-            <option value="public">Public</option>
-            <option value="private">Private</option>
-          </Form.Select>
-          {errors.visibility && (
-            <p className="text-danger">* Visibility is required</p>
-          )}
-        </Form.Group> */}
 
         <Button variant="primary" type="submit">
           Create Post
         </Button>
       </Form>
-
     </div>
   );
 }

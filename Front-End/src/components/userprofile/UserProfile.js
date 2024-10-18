@@ -10,8 +10,10 @@ function UserProfile() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [username, setUsername] = useState('');
+  const [emailError, setEmailError] = useState('');
   let { userObj } = useSelector((state) => state.user);
   const navigate = useNavigate();
+  
   const handleNavigation = (path) => {
     navigate(path);
   };
@@ -20,16 +22,28 @@ function UserProfile() {
     setEditing(true);
   };
 
+  const handleEmailBlur = () => {
+    const emailPattern = /^[a-zA-Z0-9._%+-]+@my\.unt\.edu$/;
+    if (!emailPattern.test(email)) {
+      setEmailError('Please enter a valid @my.unt.edu email address');
+    } else {
+      setEmailError('');
+    }
+  };
+
   const handleSave = () => {
-    console.log("Hi")
+    if (emailError) {
+      alert('Please fix the email error before saving.');
+      return;
+    }
+
     const original_username = userObj.username;
     const updatedUserData = { name, email, username, original_username };
 
-    axios.put(apiUrl+'/user-api/editprofile', updatedUserData)
+    axios.put(apiUrl + '/user-api/editprofile', updatedUserData)
       .then(response => {
         if (response.status === 200) {
           alert("Profile updated successfully, Login again to view the changes");
-
           setEditing(false);
         } else {
           console.error('Error updating profile:', response.data);
@@ -37,7 +51,6 @@ function UserProfile() {
       })
       .catch(error => console.error('Error updating profile:', error));
   };
-
 
   return (
     <div className="user-profile-container">
@@ -55,17 +68,21 @@ function UserProfile() {
           <div className="form-group">
             <label>Email:</label>
             {editing ? (
-              <input
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                pattern="[a-zA-Z0-9._%+-]+@my\.unt\.edu"
-                title="Please enter a valid @my.unt.edu email address"
-              />
+              <>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  onBlur={handleEmailBlur}
+                  pattern="[a-zA-Z0-9._%+-]+@my\.unt\.edu"
+                  title="Please enter a valid @my.unt.edu email address"
+                  className={emailError ? 'is-invalid' : ''}
+                />
+                {emailError && <div className="invalid-feedback">{emailError}</div>}
+              </>
             ) : (
               <span>{userObj.email}</span>
             )}
-
           </div>
           <div className="form-group">
             <label>Username:</label>

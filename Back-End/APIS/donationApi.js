@@ -50,4 +50,19 @@ donationApp.post('/donation', expressAsyncHandler(async (req, res) => {
 //   console.log(`Server is running on http://localhost:${port}`);
 // });
 
+donationApp.get('/donations', expressAsyncHandler(async (req, res) => {
+  try {
+    // Fetch all donations from the database
+    let Donation = req.app.get("donationCollectionObject");
+    const donations = await Donation.find({}).toArray();
+
+    // Return the list of donations
+    res.status(200).json({ success: true, donations });
+  } catch (error) {
+    console.error('Error fetching donations:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+}));
+
+
 module.exports = donationApp;
