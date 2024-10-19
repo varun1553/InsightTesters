@@ -28,7 +28,7 @@ function Notifications() {
         if (notification.m_p_type === "message") {
             navigate("/messages");
         } else if (notification.m_p_type === "post") {
-            navigate("/posts");
+            navigate("/post-api/posts");
         }
     };
 

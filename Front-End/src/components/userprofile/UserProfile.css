@@ -52,3 +52,26 @@ input[type="email"] {
     background-color: #28a745;
     color: #fff;
 }
+
+/* Scrollable form container */
+.scrollable-form {
+    max-height: 80vh; /* Adjust height as needed */
+    overflow-y: auto;
+    padding-right: 15px; /* Space for scrollbar */
+  }
+  
+  /* Style for delete buttons */
+  .delete-button {
+    background-color: #e74c3c;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    margin-left: 10px;
+    border-radius: 4px;
+  }
+  
+  .delete-button:hover {
+    background-color: #c0392b;
+  }
+  

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 import './new_event.css';
-import { Modal } from 'react-bootstrap';
+import { Modal, Nav } from 'react-bootstrap';
 import { useSelector } from 'react-redux';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
@@ -18,9 +18,10 @@ const Events = () => {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [editedEvent, setEditedEvent] = useState(null); // State for edited event
   const { userObj } = useSelector((state) => state.user); // Access userObj from Redux
+  const [activeTab, setActiveTab] = useState('all'); // State to manage the active tab
 
   const openPaymentDialog = (event) => {
-    setSelectedEvent(event); 
+    setSelectedEvent(event);
     setShowPaymentDialog(true);
   };
 
@@ -38,21 +39,21 @@ const Events = () => {
 
   const handleEditInputChange = (e) => {
     const { name, value } = e.target;
-    setEditedEvent(prevState => ({
+    setEditedEvent((prevState) => ({
       ...prevState,
-      [name]: value
+      [name]: value,
     }));
   };
 
   const handleDeleteEvent = async (eventId) => {
     try {
-      await axios.delete(apiUrl+`/event-api/events/${eventId}`);
+      await axios.delete(apiUrl + `/event-api/events/${eventId}`);
       // Update the events list after deletion
-      const updatedEvents = events.filter(event => event._id !== eventId);
+      const updatedEvents = events.filter((event) => event._id !== eventId);
       setEvents(updatedEvents);
-      alert("Event is deleted")
+      alert('Event is deleted');
     } catch (error) {
-      console.error("Error deleting event:", error);
+      console.error('Error deleting event:', error);
     }
   };
 
@@ -62,32 +63,32 @@ const Events = () => {
     padding: '10px 20px',
     border: 'none',
     borderRadius: '5px',
-    cursor: 'pointer'
+    cursor: 'pointer',
   };
 
   const handleSaveChanges = async () => {
     try {
       const eventId = editedEvent._id;
-      await axios.put(apiUrl+`/event-api/update-events/${eventId}`, editedEvent);
+      await axios.put(apiUrl + `/event-api/update-events/${eventId}`, editedEvent);
       // Update the events list after editing
-      const updatedEvents = events.map(event =>
+      const updatedEvents = events.map((event) =>
         event._id === editedEvent._id ? editedEvent : event
       );
       setEvents(updatedEvents);
       closeEditDialog();
     } catch (error) {
-      console.error("Error updating event:", error);
+      console.error('Error updating event:', error);
     }
   };
 
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const response = await axios.get(apiUrl+`/event-api/events?visibility=public&page=${currentPage}`);
+        const response = await axios.get(apiUrl + `/event-api/events?visibility=public&page=${currentPage}`);
         setEvents(response.data.payload.events);
         setTotalPages(response.data.payload.totalPages);
       } catch (error) {
-        console.error("Error fetching events:", error);
+        console.error('Error fetching events:', error);
       }
     };
 
@@ -98,13 +99,27 @@ const Events = () => {
     setCurrentPage(newPage);
   };
 
+  // Filter events based on the active tab
+  const filteredEvents =
+    activeTab === 'my-events'
+      ? events.filter((event) => event.userId === userObj._id)
+      : events.filter((event) => event.userId !== userObj._id);
+
   return (
     <>
       <div className="container mt-5">
         <h1 className="mb-4">Events</h1>
-        <div className='container mt-3' style={{ textDecoration: 'none', marginBottom: 20 }}>
-          <div className='col-12'>
-            <div >
+        <Nav variant="tabs" activeKey={activeTab} onSelect={(selectedTab) => setActiveTab(selectedTab)}>
+          <Nav.Item>
+            <Nav.Link eventKey="all">All Events</Nav.Link>
+          </Nav.Item>
+          <Nav.Item>
+            <Nav.Link eventKey="my-events">My Events</Nav.Link>
+          </Nav.Item>
+        </Nav>
+        <div className="container mt-3" style={{ textDecoration: 'none', marginBottom: 20 }}>
+          <div className="col-12">
+            <div>
               <Link to="/new-event" style={{ textDecoration: 'none', marginLeft: 'auto' }}>
                 <button style={buttonStyle}>
                   <span>Add new Event</span>
@@ -115,11 +130,11 @@ const Events = () => {
           </div>
         </div>
         <ul className="list-group">
-          {events.map(event => (
+          {filteredEvents.map((event) => (
             <li key={event._id} className="list-group-item mb-3 mt-3">
               <div className="event-details">
                 <h3>{event.event_name}</h3>
-                <p>Location:{event.location}</p>
+                <p>Location: {event.location}</p>
                 <p>Time: {event.dateTime}</p>
               </div>
               <div className="event-image">
@@ -151,9 +166,11 @@ const Events = () => {
         </ul>
         <nav className="mt-4">
           <ul className="pagination">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNumber => (
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNumber) => (
               <li key={pageNumber} className={`page-item ${currentPage === pageNumber ? 'active' : ''}`}>
-                <button className="page-link" onClick={() => handlePageChange(pageNumber)}>{pageNumber}</button>
+                <button className="page-link" onClick={() => handlePageChange(pageNumber)}>
+                  {pageNumber}
+                </button>
               </li>
             ))}
           </ul>

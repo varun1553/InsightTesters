@@ -75,42 +75,71 @@ userApp.post(
 );
 
 userApp.put('/editprofile', expressAsyncHandler(async (req, res) => {
-  const { name, email, username, original_username } = req.body; 
+  const { name, email, username, original_username, linkedIn, leetCode, gitHub, degree, courses } = req.body; 
 
   try {
     const userCollectionObject = req.app.get("userCollectionObject");
 
-    let updatedUserName, updatedUserEmail, updatedUsername;
+    let updateFields = {}; // Create an object to store the fields to update
 
-    if (name !== null && name !== "") {
-      updatedUserName = await userCollectionObject.findOneAndUpdate(
-        { username: original_username },
-        { $set: {name} },
-        { new: true }
-      );
-    }
-    if (email !== null && email !== "" ) {
-      updatedUserEmail = await userCollectionObject.findOneAndUpdate(
-        { username: original_username },
-        { $set: {email} },
-        { new: true }
-      );
-    }
-    if (username !== null && username !== "" ){
-      updatedUsername = await userCollectionObject.findOneAndUpdate(
-        { username: original_username },
-        { $set: {username} },
-        { new: true }
-      );
+    // Update name if it's provided
+    if (name && name.trim() !== "") {
+      updateFields.name = name;
     }
 
-    if (!updatedUserName && !updatedUserEmail && !updatedUsername) {
+    // Update email if it's provided
+    if (email && email.trim() !== "") {
+      updateFields.email = email;
+    }
+
+    // Update username if it's provided
+    if (username && username.trim() !== "") {
+      updateFields.username = username;
+    }
+
+    // Update LinkedIn if it's provided
+    if (linkedIn && linkedIn.trim() !== "") {
+      updateFields.linkedIn = linkedIn;
+    }
+
+    // Update LeetCode if it's provided
+    if (leetCode && leetCode.trim() !== "") {
+      updateFields.leetCode = leetCode;
+    }
+
+    // Update GitHub if it's provided
+    if (gitHub && gitHub.trim() !== "") {
+      updateFields.gitHub = gitHub;
+    }
+
+    // Update degree if it's provided
+    if (degree && degree.trim() !== "") {
+      updateFields.degree = degree;
+    }
+
+    // Update courses if it's provided
+    if (courses && courses.trim() !== "") {
+      updateFields.courses = courses;
+    }
+
+    // Check if there are any fields to update
+    if (Object.keys(updateFields).length === 0) {
+      return res.status(400).json({ message: 'No valid fields to update' });
+    }
+
+    // Update the user's profile with the new fields
+    const updatedUser = await userCollectionObject.findOneAndUpdate(
+      { username: original_username },
+      { $set: updateFields },
+      { new: true }
+    );
+
+    // If no user is found with the provided original_username
+    if (!updatedUser) {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    const updatedUser = updatedUserName || updatedUserEmail || updatedUsername;
-
-    res.status(200).json({ message: 'User profile updated successfully', user: updatedUser }); 
+    res.status(200).json({ message: 'User profile updated successfully', user: updatedUser });
   } catch (error) {
     console.error('Error updating user profile:', error);
     res.status(500).json({ message: 'Internal server error' });
