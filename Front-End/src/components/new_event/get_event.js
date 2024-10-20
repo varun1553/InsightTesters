@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 import './new_event.css';
-import { Modal, Nav } from 'react-bootstrap';
+import { Modal, Nav, Dropdown } from 'react-bootstrap';
 import { useSelector } from 'react-redux';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
 import CheckoutForm from './CheckoutForm';
+
 const stripePromise = loadStripe(process.env.STRIPE_PUBLIC_KEY);
 const apiUrl = process.env.REACT_APP_URL;
 
@@ -16,9 +17,10 @@ const Events = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
-  const [editedEvent, setEditedEvent] = useState(null); // State for edited event
-  const { userObj } = useSelector((state) => state.user); // Access userObj from Redux
-  const [activeTab, setActiveTab] = useState('all'); // State to manage the active tab
+  const [editedEvent, setEditedEvent] = useState(null);
+  const [activeTab, setActiveTab] = useState('all');
+  const [selectedFilter, setSelectedFilter] = useState(''); // State for booking amount filter
+  const { userObj } = useSelector((state) => state.user);
 
   const openPaymentDialog = (event) => {
     setSelectedEvent(event);
@@ -48,7 +50,6 @@ const Events = () => {
   const handleDeleteEvent = async (eventId) => {
     try {
       await axios.delete(apiUrl + `/event-api/events/${eventId}`);
-      // Update the events list after deletion
       const updatedEvents = events.filter((event) => event._id !== eventId);
       setEvents(updatedEvents);
       alert('Event is deleted');
@@ -57,20 +58,10 @@ const Events = () => {
     }
   };
 
-  const buttonStyle = {
-    backgroundColor: 'blue',
-    color: 'white',
-    padding: '10px 20px',
-    border: 'none',
-    borderRadius: '5px',
-    cursor: 'pointer',
-  };
-
   const handleSaveChanges = async () => {
     try {
       const eventId = editedEvent._id;
       await axios.put(apiUrl + `/event-api/update-events/${eventId}`, editedEvent);
-      // Update the events list after editing
       const updatedEvents = events.map((event) =>
         event._id === editedEvent._id ? editedEvent : event
       );
@@ -99,11 +90,21 @@ const Events = () => {
     setCurrentPage(newPage);
   };
 
-  // Filter events based on the active tab
-  const filteredEvents =
-    activeTab === 'my-events'
-      ? events.filter((event) => event.userId === userObj._id)
-      : events.filter((event) => event.userId !== userObj._id);
+  const handleFilterChange = (filter) => {
+    setSelectedFilter(filter);
+  };
+
+  // Filter events based on the active tab and booking amount
+  const filteredEvents = events.filter((event) => {
+    const matchesTab = activeTab === 'my-events' ? event.userId === userObj._id : true;
+    const matchesFilter = selectedFilter === '' || 
+      (selectedFilter === '0-20' && event.ticketPrice >= 0 && event.ticketPrice <= 20) ||
+      (selectedFilter === '<40' && event.ticketPrice < 40) ||
+      (selectedFilter === '<60' && event.ticketPrice < 60) ||
+      (selectedFilter === '<100' && event.ticketPrice < 100) ||
+      (selectedFilter === '>100' && event.ticketPrice > 100);
+    return matchesTab && matchesFilter;
+  });
 
   return (
     <>
@@ -117,11 +118,27 @@ const Events = () => {
             <Nav.Link eventKey="my-events">My Events</Nav.Link>
           </Nav.Item>
         </Nav>
+
+        {/* Filter Dropdown for Booking Amount */}
+        <Dropdown className="float-right mb-3 mt-3">
+          <Dropdown.Toggle variant="secondary" id="dropdown-basic">
+            Filter by Booking Amount
+          </Dropdown.Toggle>
+          <Dropdown.Menu>
+            <Dropdown.Item onClick={() => handleFilterChange('0-20')}>0-20</Dropdown.Item>
+            <Dropdown.Item onClick={() => handleFilterChange('<40')}>&lt; 40</Dropdown.Item>
+            <Dropdown.Item onClick={() => handleFilterChange('<60')}>&lt; 60</Dropdown.Item>
+            <Dropdown.Item onClick={() => handleFilterChange('<100')}>&lt; 100</Dropdown.Item>
+            <Dropdown.Item onClick={() => handleFilterChange('>100')}>&gt; 100</Dropdown.Item>
+            <Dropdown.Item onClick={() => handleFilterChange('')}>Clear Filter</Dropdown.Item>
+          </Dropdown.Menu>
+        </Dropdown>
+
         <div className="container mt-3" style={{ textDecoration: 'none', marginBottom: 20 }}>
           <div className="col-12">
             <div>
               <Link to="/new-event" style={{ textDecoration: 'none', marginLeft: 'auto' }}>
-                <button style={buttonStyle}>
+                <button style={{ backgroundColor: 'blue', color: 'white', padding: '10px 20px', border: 'none', borderRadius: '5px', cursor: 'pointer' }}>
                   <span>Add new Event</span>
                   <span style={{ marginLeft: '5px' }}>+</span>
                 </button>
@@ -129,6 +146,7 @@ const Events = () => {
             </div>
           </div>
         </div>
+
         <ul className="list-group">
           {filteredEvents.map((event) => (
             <li key={event._id} className="list-group-item mb-3 mt-3">
@@ -141,9 +159,7 @@ const Events = () => {
                 <img src={event.image_url} alt="Event" style={{ height: 150, width: 200 }} />
               </div>
               <div className="buttons" style={{ marginTop: '10px' }}>
-                <button className="btn btn-primary mr-6" onClick={() => openPaymentDialog(event)}>
-                  <span>Book Tickets</span>
-                </button>
+                <button className="btn btn-primary mr-6" onClick={() => openPaymentDialog(event)}>Book Tickets</button>
                 <Modal show={showPaymentDialog} onHide={closePaymentDialog}>
                   <Modal.Header closeButton>
                     <Modal.Title>Booking Details</Modal.Title>
@@ -164,6 +180,7 @@ const Events = () => {
             </li>
           ))}
         </ul>
+
         <nav className="mt-4">
           <ul className="pagination">
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNumber) => (
@@ -176,6 +193,7 @@ const Events = () => {
           </ul>
         </nav>
       </div>
+
       {/* Edit Event Modal */}
       <Modal show={!!editedEvent} onHide={closeEditDialog}>
         <Modal.Header closeButton>
@@ -192,18 +210,18 @@ const Events = () => {
               <input type="text" className="form-control" id="location" name="location" value={editedEvent?.location || ''} onChange={handleEditInputChange} />
             </div>
             <div className="form-group">
-              <label htmlFor="dateTime">Date & Time</label>
-              <input type="date" className="form-control" id="dateTime" name="dateTime" value={editedEvent?.dateTime || ''} onChange={handleEditInputChange} />
-            </div>
-            <div className="form-group">
-              <label htmlFor="ticketPrice">Ticket Price</label>
-              <input type="text" className="form-control" id="ticketPrice" name="ticketPrice" value={editedEvent?.ticketPrice || ''} onChange={handleEditInputChange} />
+              <label htmlFor="dateTime">Date and Time</label>
+              <input type="text" className="form-control" id="dateTime" name="dateTime" value={editedEvent?.dateTime || ''} onChange={handleEditInputChange} />
             </div>
           </form>
         </Modal.Body>
         <Modal.Footer>
-          <button className="btn btn-secondary" onClick={closeEditDialog}>Cancel</button>
-          <button className="btn btn-primary" onClick={handleSaveChanges}>Save Changes</button>
+          <button className="btn btn-secondary" onClick={closeEditDialog}>
+            Close
+          </button>
+          <button className="btn btn-primary" onClick={handleSaveChanges}>
+            Save Changes
+          </button>
         </Modal.Footer>
       </Modal>
     </>
