@@ -18,13 +18,24 @@ const Posts = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [viewType, setViewType] = useState('all'); // Default view type is 'all'
+  const [selectedCategory, setSelectedCategory] = useState(''); // State for selected category
   const [showEditModal, setShowEditModal] = useState(false);
   const [editPost, setEditPost] = useState({});
   const { userObj } = useSelector((state) => state.user); // Access userObj from Redux
-  const filteredPosts = viewType === 'all' 
-    ? posts.filter(post => post.createdBy !== userObj.username) 
-    : posts.filter(post => post.createdBy === userObj.username);
-  
+
+  // Filter posts based on view type and selected category
+  const filteredPosts = posts.filter(post => {
+    const isViewTypeMatch = viewType === 'all' 
+      ? post.createdBy !== userObj.username 
+      : post.createdBy === userObj.username;
+
+    const isCategoryMatch = selectedCategory 
+      ? post.category === selectedCategory 
+      : true;
+
+    return isViewTypeMatch && isCategoryMatch;
+  });
+
   useEffect(() => {
     fetchPosts();
   }, [currentPage, viewType]);
@@ -93,6 +104,10 @@ const Posts = () => {
     }
   };
 
+  const handleCategoryChange = (category) => {
+    setSelectedCategory(category);
+  };
+
   const buttonStyle = {
     padding: '10px 20px',
     borderRadius: '5px',
@@ -127,6 +142,16 @@ const Posts = () => {
           </Nav>
         </Navbar.Collapse>
       </Navbar>
+
+      {/* Category Filter Dropdown */}
+      <div className="container mt-3">
+        <DropdownButton id="dropdown-basic-button" title="Select Category">
+          <Dropdown.Item onClick={() => handleCategoryChange('')}>All Categories</Dropdown.Item>
+          <Dropdown.Item onClick={() => handleCategoryChange('education')}>Education</Dropdown.Item>
+          <Dropdown.Item onClick={() => handleCategoryChange('travel')}>Travel</Dropdown.Item>
+          <Dropdown.Item onClick={() => handleCategoryChange('technology')}>Technology</Dropdown.Item>
+        </DropdownButton>
+      </div>
 
       <div className='container mt-3' style={{ textDecoration: 'none' }}>
         <div className='col-12'>
@@ -196,7 +221,7 @@ const Posts = () => {
                       id={`dropdown-menu-align-end-${post._id}`}
                       style={{ background: 'none', border: 'none', boxShadow: 'none' }}
                     >
-                      <Dropdown.Item eventKey="3" onClick={() => handleReportPost(post._id)}>Report</Dropdown.Item>
+                      <Dropdown.Item eventKey="1" onClick={() => handleReportPost(post._id)}>Report</Dropdown.Item>
                     </DropdownButton>
                   ) : null}
                 </div>
@@ -206,25 +231,20 @@ const Posts = () => {
         ) : (
           <p>No posts available.</p>
         )}
-
-        {/* Pagination */}
-        <nav className="mt-4">
-          <ul className="pagination">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNumber => (
-              <li key={pageNumber} className={`page-item ${currentPage === pageNumber ? 'active' : ''}`}>
-                <button className="page-link" onClick={() => handlePageChange(pageNumber)}>{pageNumber}</button>
-              </li>
-            ))}
-          </ul>
-        </nav>
       </div>
 
-      <div>
-        <Routes>
-          <Route path="/new-post" element={<NewPost />} />
-          <Route path="/post/:id" element={<Post />} />
-        </Routes>
-      </div>
+      {/* Pagination */}
+      <nav>
+        <ul className="pagination justify-content-center">
+          {Array.from({ length: totalPages }, (_, index) => (
+            <li key={index + 1} className={`page-item ${currentPage === index + 1 ? 'active' : ''}`}>
+              <button className="page-link" onClick={() => handlePageChange(index + 1)}>
+                {index + 1}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </nav>
     </div>
   );
 };
