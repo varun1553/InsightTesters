@@ -15,6 +15,111 @@ userApp.use(exp.urlencoded());
 
 //USER API Routes
 
+const nodemailer = require('nodemailer');
+
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: 'mahankalifamily4@gmail.com',
+    pass: 'ycca smtu hgox clmk', // Use App Password if 2-Step Verification is enabled
+  },
+});
+
+transporter.sendMail({
+  from: 'mahankalifamily4@gmail.com',
+  to: 'VarunMahankali@my.unt.edu',
+  subject: 'Test Email',
+  text: 'This is a test email.',
+}, (error, info) => {
+  if (error) {
+    return console.log('Error:', error);
+  }
+  console.log('Email sent:', info.response);
+});
+
+// Middleware to extract body of request object
+userApp.use(exp.json());
+userApp.use(exp.urlencoded());
+
+// Send verification code
+userApp.post("/send-verification-code", expressAsyncHandler(async (req, res) => {
+  const { email, username } = req.body;
+  const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+  try {
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: 'Email Verification Code',
+      text: `Your verification code is ${verificationCode}`,
+    });
+
+    // Send the verification code in the response
+    res.status(200).json({ message: 'Verification code sent', verificationCode });
+  } catch (error) {
+    console.error('Error sending verification code:', error);
+    res.status(500).json({ message: 'Error sending verification code', error: error.message });
+  }
+}));
+
+
+
+userApp.post("/signup-send-verification-code", expressAsyncHandler(async (req, res) => {
+  const { email } = req.body;
+  console.log("Email for verification code:", email); // Log the email
+
+  const verificationCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+  try {
+    // Send the verification code via email
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: 'Email Verification Code',
+      text: `Your verification code is ${verificationCode}`,
+    });
+
+    console.log("Verification code sent to:", verificationCode); // Log when the email is sent
+
+    // Save the verification code to the database
+    const userCollectionObject = req.app.get("userCollectionObject");
+    //await userCollectionObject.updateOne({ email }, { $set: { verificationCode } });
+
+    res.status(200).json({ message: 'Verification code sent', verificationCode }); // Return the verification code
+  } catch (error) {
+    console.error('Error sending verification code:', error);
+    res.status(500).json({ message: 'Error sending verification code', error: error.message });
+  }
+}));
+
+
+// Verify email
+userApp.post("/verify-email", expressAsyncHandler(async (req, res) => {
+  const { email, verificationCode, username } = req.body;
+
+  try {
+    const userCollectionObject = req.app.get("userCollectionObject");
+    console.log("Hi")
+    const user = await userCollectionObject.findOne({ username });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (user.verificationCode === verificationCode) {
+      await userCollectionObject.updateOne({ username }, { $set: { isEmailVerified: true } });
+      res.status(200).json({ verified: true });
+    } else {
+      res.status(400).json({ verified: false, message: 'Invalid verification code' });
+    }
+  } catch (error) {
+    console.error('Error verifying email:', error);
+    res.status(500).json({ message: 'Error verifying email' });
+  }
+}));
+
+
+
 //create route to handle '/getusers' path
 userApp.get(
   "/getusers",
@@ -198,29 +303,6 @@ userApp.post("/forgotpassword", expressAsyncHandler(async (request, response) =>
 
 }));
 
-// userApp.put("/changepassword", expressAsyncHandler(async (request, response) => {
-//   // Extract username and new password from the request body
-//   const { username, newPassword } = request.body;
-
-//   try {
-//     const userCollectionObject = request.app.get("userCollectionObject");
-//     const user = await userCollectionObject.findOne({ username });
-//     if (!user) {
-//       return response.status(404).json({ message: "User not found" });
-//     }
-
-//     const hashedPassword = await bcryptjs.hash(newPassword, 6);
-
-//     await userCollectionObject.updateOne({ username }, { $set: { password: hashedPassword } });
-
-//     response.status(200).json({ message: "Password updated successfully" });
-//   } catch (error) {
-//     console.error("Error updating password:", error);
-//     response.status(500).json({ message: "Failed to update password" });
-//   }
-
-// }));
-
 userApp.post(
   "/create-user",
   expressAsyncHandler(async (request, response) => {
@@ -240,6 +322,7 @@ userApp.post(
       response.status(400).send({ message: "Invalid JSON data" });
       return;
     }
+    newUserObj.verificationCode = null; 
 
     //seacrh for user by username
     let userOfDB = await userCollectionObject.findOne({

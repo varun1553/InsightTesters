@@ -1,10 +1,11 @@
 .user-profile-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
+    max-height: 80vh; /* Limit the height of the container */
+    overflow-y: auto; /* Add vertical scrollbar if content overflows */
+    padding: 20px; /* Add some padding */
+    border: 1px solid #ccc; /* Optional: Add a border */
+    border-radius: 8px; /* Optional: Rounded corners */
 }
-
+  
 .profile-form {
     max-width: 400px;
     padding: 20px;

@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useSelector } from "react-redux";
 import { useNavigate } from 'react-router-dom';
 import './UserProfile.css'; // Import CSS file for styling
+
 const apiUrl = process.env.REACT_APP_URL;
 
 function UserProfile() {
@@ -16,8 +17,27 @@ function UserProfile() {
   const [degree, setDegree] = useState('');
   const [courses, setCourses] = useState('');
   const [emailError, setEmailError] = useState('');
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
+  const [verificationCode, setVerificationCode] = useState('');
+  const [sentVerificationCode, setSentVerificationCode] = useState(''); // Store sent code
+  const [verificationSent, setVerificationSent] = useState(false);
+
   let { userObj } = useSelector((state) => state.user);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (userObj) {
+      setName(userObj.name);
+      setEmail(userObj.email);
+      setUsername(userObj.username);
+      setLinkedIn(userObj.linkedIn);
+      setLeetCode(userObj.leetCode);
+      setGitHub(userObj.gitHub);
+      setDegree(userObj.degree);
+      setCourses(userObj.courses);
+      setIsEmailVerified(userObj.isEmailVerified);
+    }
+  }, [userObj]);
 
   const handleEdit = () => {
     setEditing(true);
@@ -29,6 +49,29 @@ function UserProfile() {
       setEmailError('Please enter a valid @my.unt.edu email address');
     } else {
       setEmailError('');
+    }
+  };
+
+  const handleSendVerification = async () => {
+    try {
+      const response = await axios.post(`${apiUrl}/user-api/send-verification-code`, { email, username });
+      console.log(response.data)
+      setSentVerificationCode(response.data.verificationCode); // Store the sent verification code
+      setVerificationSent(true);
+      alert('Verification code sent to your email!');
+    } catch (error) {
+      console.error('Error sending verification code:', error);
+    }
+  };
+
+  const handleVerifyEmail = () => {
+    console.log(verificationCode)
+    console.log(sentVerificationCode)
+    if (verificationCode === sentVerificationCode) {
+      setIsEmailVerified(true);
+      alert('Email verified successfully!');
+    } else {
+      alert('Invalid verification code. Please try again.');
     }
   };
 
@@ -51,7 +94,7 @@ function UserProfile() {
       original_username 
     };
 
-    axios.put(apiUrl + '/user-api/editprofile', updatedUserData)
+    axios.put(`${apiUrl}/user-api/editprofile`, updatedUserData)
       .then(response => {
         if (response.status === 200) {
           alert("Profile updated successfully, Login again to view the changes");
@@ -90,6 +133,23 @@ function UserProfile() {
                   className={emailError ? 'is-invalid' : ''}
                 />
                 {emailError && <div className="invalid-feedback">{emailError}</div>}
+                {!isEmailVerified && (
+                  <>
+                    <button onClick={handleSendVerification}>Verify</button>
+                    {verificationSent && (
+                      <>
+                        <input 
+                          type="text" 
+                          placeholder="Enter verification code" 
+                          value={verificationCode} 
+                          onChange={e => setVerificationCode(e.target.value)} 
+                        />
+                        <button onClick={handleVerifyEmail}>Confirm</button>
+                      </>
+                    )}
+                  </>
+                )}
+                {isEmailVerified && <span style={{ color: 'green' }}>Verified</span>}
               </>
             ) : (
               <span>{userObj.email}</span>
@@ -103,7 +163,6 @@ function UserProfile() {
               <span>{userObj.username}</span>
             )}
           </div>
-          {/* LinkedIn Profile Link */}
           <div className="form-group">
             <label>LinkedIn Profile URL:</label>
             {editing ? (
@@ -112,7 +171,6 @@ function UserProfile() {
               <span>{userObj.linkedIn || 'Not provided'}</span>
             )}
           </div>
-          {/* LeetCode Profile Link */}
           <div className="form-group">
             <label>LeetCode Profile URL:</label>
             {editing ? (
@@ -121,7 +179,6 @@ function UserProfile() {
               <span>{userObj.leetCode || 'Not provided'}</span>
             )}
           </div>
-          {/* GitHub Username */}
           <div className="form-group">
             <label>GitHub Username:</label>
             {editing ? (
@@ -130,7 +187,6 @@ function UserProfile() {
               <span>{userObj.gitHub || 'Not provided'}</span>
             )}
           </div>
-          {/* Latest Degree Passout */}
           <div className="form-group">
             <label>Latest Degree Passout Year:</label>
             {editing ? (
@@ -139,7 +195,6 @@ function UserProfile() {
               <span>{userObj.degree || 'Not provided'}</span>
             )}
           </div>
-          {/* Courses Taken */}
           <div className="form-group">
             <label>Courses Taken:</label>
             {editing ? (

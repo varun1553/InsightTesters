@@ -30,6 +30,7 @@ function Notifications() {
         } else if (notification.m_p_type === "post") {
             navigate("/post-api/posts");
         }
+        console.log(notification)
         // Optionally, delete the notification after navigating
         deleteNotification(notification._id);
     };
