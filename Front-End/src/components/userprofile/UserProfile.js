@@ -127,8 +127,8 @@ function UserProfile() {
                   type="email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
-                  onBlur={handleEmailBlur}
-                  pattern="[a-zA-Z0-9._%+-]+@my\.unt\.edu"
+                  //onBlur={handleEmailBlur}
+                  //pattern="[a-zA-Z0-9._%+-]+@my\.unt\.edu"
                   title="Please enter a valid @my.unt.edu email address"
                   className={emailError ? 'is-invalid' : ''}
                 />
