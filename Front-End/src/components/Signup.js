@@ -122,8 +122,8 @@ function Signup() {
                   {...register("email", {
                     required: true,
                     pattern: {
-                      value: /^[a-zA-Z0-9._%+-]+@my\.unt\.edu$/,
-                      message: "Please enter a valid @my.unt.edu email address",
+                     // value: /^[a-zA-Z0-9._%+-]+@my\.unt\.edu$/,
+                      //message: "Please enter a valid @my.unt.edu email address",
                     },
                   })}
                   id="email"
