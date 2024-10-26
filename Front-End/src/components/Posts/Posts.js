@@ -10,6 +10,7 @@ import { Link, Routes, Route } from 'react-router-dom';
 import NewPost from "../NewPost/NewPost";
 import Post from './Post/Post';
 import TempPost from './TempPost/TempPost';
+
 const apiUrl = process.env.REACT_APP_URL;
 
 const Posts = () => {
@@ -17,11 +18,23 @@ const Posts = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [viewType, setViewType] = useState('all'); // Default view type is 'all'
+  const [selectedCategory, setSelectedCategory] = useState(''); // State for selected category
   const [showEditModal, setShowEditModal] = useState(false);
   const [editPost, setEditPost] = useState({});
   const { userObj } = useSelector((state) => state.user); // Access userObj from Redux
-  const filteredPosts = viewType === 'all' ? posts.filter(post => post.createdBy != userObj.username) : posts.filter(post => post.createdBy === userObj.username);
-  const [liked, setLiked] = useState(false);
+
+  // Filter posts based on view type and selected category
+  const filteredPosts = posts.filter(post => {
+    const isViewTypeMatch = viewType === 'all' 
+      ? post.createdBy !== userObj.username 
+      : post.createdBy === userObj.username;
+
+    const isCategoryMatch = selectedCategory 
+      ? post.category === selectedCategory 
+      : true;
+
+    return isViewTypeMatch && isCategoryMatch;
+  });
 
   useEffect(() => {
     fetchPosts();
@@ -29,13 +42,15 @@ const Posts = () => {
 
   const fetchPosts = async () => {
     try {
-      let url = apiUrl+'/post-api/posts';
+      let url = apiUrl + '/post-api/posts';
       let createdByParam = '';
+
       if (viewType === 'my') {
         createdByParam = `?createdBy=${userObj.name}`;
       } else if (viewType === 'all') {
         createdByParam = `?excludeCreatedBy=${userObj.name}`;
       }
+
       url += `${createdByParam}&page=${currentPage}`;
       const response = await axios.get(url);
       console.log(response.data.payload.posts);
@@ -52,9 +67,7 @@ const Posts = () => {
 
   const handleDeletePost = async (postId) => {
     try {
-      console.log(postId);
-      await axios.delete(apiUrl+`/post-api/delete-post/${postId}`);
-      // Assuming the delete operation was successful, update the UI by refetching the posts
+      await axios.delete(`${apiUrl}/post-api/delete-post/${postId}`);
       fetchPosts();
     } catch (error) {
       console.error("Error deleting post:", error);
@@ -62,13 +75,11 @@ const Posts = () => {
   };
 
   const handleReportPost = async (postId) => {
-    // Implement report post functionality here
     try {
-      const response = await axios.post(apiUrl+`/post-api/reportpost/${postId}`);
+      const response = await axios.post(`${apiUrl}/post-api/reportpost/${postId}`);
       if (response.data.message === "Post reported successfully") {
         alert("Post reported successfully");
       }
-
     } catch (error) {
       console.error("Unsuccessful report");
     }
@@ -85,9 +96,7 @@ const Posts = () => {
 
   const handleSaveEdit = async () => {
     try {
-      // Send the updated post details to the backend
-      await axios.put(apiUrl+`/post-api/edit-post/${editPost._id}`, editPost);
-      // Assuming the update operation was successful, close the modal and refresh the posts
+      await axios.put(`${apiUrl}/post-api/edit-post/${editPost._id}`, editPost);
       setShowEditModal(false);
       fetchPosts();
     } catch (error) {
@@ -95,41 +104,8 @@ const Posts = () => {
     }
   };
 
-  const handleLikeClick = async (postId) => {
-    if (liked) {
-      handleUnlike();
-    } else {
-      handleLike();
-    }
-  };
-
-  const handleLike = async (postId) => {
-    try {
-      const response = await axios.get(`/increaselike/${postId}`);
-      if (response.status === 200) {
-        console.log(response.data.message);
-        setLiked(true);
-      } else {
-        console.error('Error increasing like count:', response.statusText);
-      }
-    } catch (error) {
-      console.error('Error increasing like count:', error);
-    }
-  };
-
-  const handleUnlike = async (postId) => {
-    try {
-      const response = await axios.get(`/decreaselike/${postId}`);
-
-      if (response.status === 200) {
-        console.log(response.data.message);
-        setLiked(false);
-      } else {
-        console.error('Error decreasing like count:', response.statusText);
-      }
-    } catch (error) {
-      console.error('Error decreasing like count:', error);
-    }
+  const handleCategoryChange = (category) => {
+    setSelectedCategory(category);
   };
 
   const buttonStyle = {
@@ -167,10 +143,19 @@ const Posts = () => {
         </Navbar.Collapse>
       </Navbar>
 
+      {/* Category Filter Dropdown */}
+      <div className="container mt-3">
+        <DropdownButton id="dropdown-basic-button" title="Select Category">
+          <Dropdown.Item onClick={() => handleCategoryChange('')}>All Categories</Dropdown.Item>
+          <Dropdown.Item onClick={() => handleCategoryChange('education')}>Education</Dropdown.Item>
+          <Dropdown.Item onClick={() => handleCategoryChange('travel')}>Travel</Dropdown.Item>
+          <Dropdown.Item onClick={() => handleCategoryChange('technology')}>Technology</Dropdown.Item>
+        </DropdownButton>
+      </div>
+
       <div className='container mt-3' style={{ textDecoration: 'none' }}>
         <div className='col-12'>
-          {/* <div className='col-10'></div> */}
-          <div >
+          <div>
             <Link to="/new-post" style={{ textDecoration: 'none', marginLeft: 'auto' }}>
               <button style={buttonStyle}>
                 <span>Add new post</span>
@@ -217,15 +202,9 @@ const Posts = () => {
           <ul className="list-group">
             {filteredPosts.map((post, index) => (
               <li key={post._id} className="list-group-item" style={{ marginBottom: index < posts.length - 1 ? '20px' : '0' }}>
-                {viewType === 'my' && post.createdBy === userObj.username ? (
-                  <div className="d-flex justify-content-between align-items-center">
-                    {/* <div>
-                      <h3>{post.title}</h3>
-                      <p>{post.content}</p>
-                      <p>Category: {post.category}</p>
-                    </div> */}
-                      <TempPost key={post._id} post={post} />
-
+                <div className="d-flex justify-content-between align-items-center">
+                  <TempPost post={post} />
+                  {viewType === 'my' && post.createdBy === userObj.username ? (
                     <DropdownButton
                       align="end"
                       title={<span style={{ color: 'inherit' }}>&#8942;</span>}
@@ -235,71 +214,38 @@ const Posts = () => {
                       <Dropdown.Item eventKey="1" onClick={() => handleEditPost(post)}>Edit</Dropdown.Item>
                       <Dropdown.Item eventKey="2" onClick={() => handleDeletePost(post._id)}>Delete</Dropdown.Item>
                     </DropdownButton>
-                  </div>
-                ) : null}
-
-                {viewType === 'all' && post.createdBy !== userObj.username ? (
-                  
-                  <div className="d-flex justify-content-between align-items-center">
-                    {/* <Link className="post_link" to={`${url}/post/${post._id}`}>
-                    <div className='post_container'>
-                      <h3>{post.title}</h3>
-                      <p>{post.content}</p>
-                      <p>Category: {post.category}</p>
-                    </div>
-                    </Link> */}
-                    <TempPost key={post._id} post={post} />
-                    <div>
-                    
-                      {/* <button onClick={liked ? handleUnlike(post._id) : handleLike(post._id)}>
-                        {liked ? <i className="fas fa-heart"></i> : <i className="far fa-heart"></i>}
-                        {post.likecount}
-                      </button>
-                      <button>
-                        <i className="far fa-comment"></i>
-                      </button> */}
-
-                    {/* <button className={`like-button ${liked ? 'liked' : ''}`} onClick={handleLikeClick}>
-                      {liked ? 'Liked!' : 'Like'}
-                    </button> */}
-                    </div>
-                    
+                  ) : viewType === 'all' && post.createdBy !== userObj.username ? (
                     <DropdownButton
                       align="end"
                       title={<span style={{ color: 'inherit' }}>&#8942;</span>}
                       id={`dropdown-menu-align-end-${post._id}`}
                       style={{ background: 'none', border: 'none', boxShadow: 'none' }}
                     >
-                      <Dropdown.Item eventKey="3" onClick={() => handleReportPost(post._id)}>Report</Dropdown.Item>
+                      <Dropdown.Item eventKey="1" onClick={() => handleReportPost(post._id)}>Report</Dropdown.Item>
                     </DropdownButton>
-                  </div>
-                ) : null}
+                  ) : null}
+                </div>
               </li>
             ))}
           </ul>
         ) : (
           <p>No posts available.</p>
         )}
+      </div>
 
-        {/* Pagination */}
-        <nav className="mt-4">
-          <ul className="pagination">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNumber => (
-              <li key={pageNumber} className={`page-item ${currentPage === pageNumber ? 'active' : ''}`}>
-                <button className="page-link" onClick={() => handlePageChange(pageNumber)}>{pageNumber}</button>
-              </li>
-            ))}
-          </ul>
-        </nav>
-      </div>
-      <div>
-        <Routes>
-          <Route path="/new-post" element={<NewPost />} />
-          <Route path="/post/:id" element={<Post/>}/>
-        </Routes>
-      </div>
+      {/* Pagination */}
+      <nav>
+        <ul className="pagination justify-content-center">
+          {Array.from({ length: totalPages }, (_, index) => (
+            <li key={index + 1} className={`page-item ${currentPage === index + 1 ? 'active' : ''}`}>
+              <button className="page-link" onClick={() => handlePageChange(index + 1)}>
+                {index + 1}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </nav>
     </div>
-
   );
 };
 

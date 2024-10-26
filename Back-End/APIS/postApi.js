@@ -12,11 +12,9 @@ postApp.use(exp.urlencoded());
 postApp.post(
   "/new-post",
   expressAsyncHandler(async (request, response) => {
-    //get postCollectionObject
     let postCollectionObject = request.app.get("postCollectionObject");
     let notificationsCollectionObject = request.app.get("notificationsCollectionObject");
 
-    //get newPostObj as string from client and convert into object
     let newPostObj;
     console.log("Received postObj data:", request.body.postObj);
     try {
@@ -28,17 +26,21 @@ postApp.post(
       response.status(400).send({ message: "Invalid JSON data" });
       return;
     }
-
-    // Insert the new post object into the database
     await postCollectionObject.insertOne(newPostObj);
+
+    // Notify about the new post
     const recipient = "all";
-    const message_notify = newPostObj.createdBy + " added a new post";
+    const message_notify = `${newPostObj.createdBy} added a new post`;
     const user_type = "user";
-    const m_p_type = "post"
-    await notificationsCollectionObject.insertOne({ recipient, message_notify, user_type, m_p_type, createdAt: Date.now() })
+    const m_p_type = "post";
+    await notificationsCollectionObject.insertOne({ recipient, message_notify, user_type, m_p_type, createdAt: Date.now() });
+
+    // Send response back to client
     response.send({ message: "New Post created" });
   })
 );
+
+
 
 postApp.post(
   "/reportpost/:postId",

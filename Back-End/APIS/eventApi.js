@@ -29,7 +29,7 @@ eventApp.post(
 
     // Insert the new event object into the database
     await eventCollectionObject.insertOne(newEventObj);
-    response.send({ message: "New Event created" });
+    response.send({ message: "New Event Created" });
   })
 );
 

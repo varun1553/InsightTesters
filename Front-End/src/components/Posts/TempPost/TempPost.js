@@ -91,6 +91,7 @@ const TempPost = ({ post }) => {
   return (
     <div className="temp_post-container">
       <h3 className="temp_post-title">{post.title}</h3>
+      <img src={post.imageUrl} alt={post.title} style={{ height: '200px', width: '100%', objectFit: 'cover' }} />
       <p className="temp_post-likes">{post.content}</p>
       
       <div className="buttons_container">
